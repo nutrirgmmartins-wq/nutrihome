@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriClínica Hospitalar - Dr. Rodrigo Garcia Martins</title>
+    <style>
+        :root {
+            --primary: #0f5b44;
+            --primary-light: #e8f3f0;
+            --gold: #c9a348;
+            --bg-body: #f4f6f5;
+            --border-color: #d1d5db;
+            --text-dark: #222222;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: #ffffff; border-bottom: 1px solid var(--border-color); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .brand h1 { font-size: 18px; color: var(--primary); }
+        .brand span { font-size: 11px; background: var(--primary-light); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: 600; display: inline-block; margin-top: 2px; }
+
+        /* MENU DE ABAS SUPERIOR */
+        nav.nav-main { background: #ffffff; border-bottom: 2px solid var(--border-color); display: flex; gap: 4px; padding: 0 15px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { background: transparent; border: none; border-bottom: 3px solid transparent; padding: 12px 14px; font-size: 12px; font-weight: 600; color: #555; cursor: pointer; white-space: nowrap; }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+
+        .app-body { display: flex; flex: 1; }
+
+        /* PAINEL LATERAL */
+        aside.sidebar { width: 250px; background: #ffffff; border-right: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .lista-pacientes { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; max-height: 70vh; }
+        .paciente-item { padding: 9px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; background: #fafafa; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .paciente-item:hover, .paciente-item.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: bold; }
+
+        /* CONTEÚDO PRINCIPAL */
+        main.main-content { flex: 1; padding: 20px; overflow-y: auto; }
+        .tab-pane { display: none; background: #ffffff; padding: 25px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 2px 6px rgba(0,0,0,0.03); max-width: 950px; margin: 0 auto; }
+        .tab-pane.active { display: block; }
+
+        h2 { color: var(--primary); font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        label { font-size: 11px; font-weight: 600; color: #555; }
+        input, select, textarea { padding: 9px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; width: 100%; }
+
+        .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .btn:hover { opacity: 0.92; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-ai { background: #6366f1; color: #fff; }
+
+        /* ESTILO DO RECEITUÁRIO A4 */
+        .a4-wrapper { overflow-x: auto; padding-bottom: 10px; }
+        .page-a4 { background: white; width: 210mm; min-height: 297mm; padding: 20mm; border: 1px solid #ccc; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: 0 auto; }
+        .cabecalho-doc { text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 12px; margin-bottom: 15px; }
+        .logo-box { max-height: 75px; max-width: 150px; margin: 0 auto 6px auto; display: block; object-fit: contain; }
+        .cab-nome { font-family: Georgia, serif; font-size: 20px; color: var(--primary); font-weight: bold; }
+        .cab-sub { font-size: 10px; letter-spacing: 2px; color: var(--primary); font-weight: bold; }
+        .cab-esp { font-size: 10px; font-style: italic; color: #555; }
+        .cab-reg { font-size: 9px; color: #666; margin-top: 3px; }
+        .campo-editavel { outline: none; border: 1px dashed transparent; padding: 4px; border-radius: 4px; white-space: pre-wrap; }
+        .campo-editavel:hover { border-color: #bbb; background: #fafafa; }
+        .campo-editavel:focus { border-color: var(--primary); background: #fff; }
+
+        /* RESPONSIVIDADE CELULAR */
+        @media (max-width: 768px) {
+            .app-body { flex-direction: column; }
+            aside.sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .lista-pacientes { max-height: 140px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            main.main-content { padding: 12px; }
+            .tab-pane { padding: 16px; }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; padding: 10mm; }
+            .no-print { display: none !important; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="no-print">
+        <div class="brand">
+            <h1>NutriClínica Hospitalar</h1>
+            <span>Sistema Completo de Consultório &amp; Internação</span>
+        </div>
+        <div style="font-size: 12px; font-weight: bold; color: #555;">
+            Dr. Rodrigo Garcia Martins · CRN-DF 23512
+        </div>
+    </header>
+
+    <nav class="nav-main no-print">
+        <button class="tab-btn active" onclick="mudarAba(event, 'tab-pacientes')">1. Cadastro &amp; Consulta</button>
+        <button class="tab-btn" onclick="mudarAba(event, 'tab-anamnese')">2. Anamnese</button>
+        <button class="tab-btn" onclick="mudarAba(event, 'tab-bioimpedancia')">3. Bioimpedância &amp; DRIs</button>
+        <button class="tab-btn" onclick="mudarAba(event, 'tab-exames')">4. Exames Bioquímicos</button>
+        <button class="tab-btn" onclick="mudarAba(event, 'tab-substituicoes')">5. Lista de Substituições</button>
+        <button class="tab-btn" onclick="mudarAba(event, 'tab-receituario')">6. Receituário A4 &amp; Logo</button>
+    </nav>
+
+    <div class="app-body">
+        <aside class="sidebar no-print">
+            <button class="btn" onclick="novoPaciente()" style="width: 100%;">+ Novo Paciente</button>
+            <div style="font-size: 11px; font-weight: bold; color: #666; margin-top: 5px;">Pacientes:</div>
+            <div class="lista-pacientes" id="listaPacientesBox"></div>
+        </aside>
+
+        <main class="main-content">
+            
+            <!-- ABA 1: PACIENTES -->
+            <div id="tab-pacientes" class="tab-pane active">
+                <h2>Cadastro e Dados do Paciente</h2>
+                <div class="grid-2">
+                    <div class="form-group"><label>Nome Completo</label><input type="text" id="cadNome"></div>
+                    <div class="form-group"><label>Código / Prontuário / Leito</label><input type="text" id="cadCodigo" value="PAC-0001"></div>
+                    <div class="form-group"><label>Data de Nascimento</label><input type="date" id="cadNasc"></div>
+                    <div class="form-group"><label>Sexo</label><select id="cadSexo"><option>Feminino</option><option>Masculino</option></select></div>
+                    <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" id="cadFone" placeholder="(61) 99999-9999"></div>
+                    <div class="form-group"><label>E-mail</label><input type="email" id="cadEmail"></div>
+                </div>
+                <button class="btn" onclick="salvarPacienteAtual()">Salvar Cadastro</button>
+            </div>
+
+            <!-- ABA 2: ANAMNESE -->
+            <div id="tab-anamnese" class="tab-pane">
+                <h2>Anamnese e Hábitos de Vida</h2>
+                <div class="grid-3">
+                    <div class="form-group"><label>Intestino</label><select id="anIntestino"><option>Regular (Diário)</option><option>Preso (Constipado)</option><option>Diarreico</option></select></div>
+                    <div class="form-group"><label>Pressão Arterial</label><input type="text" id="anPA" placeholder="120x80 mmHg"></div>
+                    <div class="form-group"><label>Água (Litros/dia)</label><input type="text" id="anAgua" placeholder="2.5 L"></div>
+                </div>
+                <div class="form-group"><label>Alergias e Intolerâncias</label><input type="text" id="anAlergias" placeholder="Lactose, glúten, frutos do mar..."></div>
+                <div class="form-group"><label>Histórico Clínico, Via Alimentar e Observações</label><textarea rows="4" id="anObs" placeholder="Patologias, via oral/enteral/parenteral, histórico familiar, queixas..."></textarea></div>
+                <button class="btn" onclick="salvarAnamnese()">Salvar Anamnese</button>
+            </div>
+
+            <!-- ABA 3: BIOIMPEDÂNCIA E DRIS -->
+            <div id="tab-bioimpedancia" class="tab-pane">
+                <h2>Bioimpedância, Circunferências e Gasto Energético (DRIs)</h2>
+                <div class="grid-3">
+                    <div class="form-group"><label>Peso Atual (kg)</label><input type="number" step="0.1" id="bioPeso" placeholder="98.5"></div>
+                    <div class="form-group"><label>Altura (cm)</label><input type="number" id="bioAltura" placeholder="165"></div>
+                    <div class="form-group"><label>Idade (anos)</label><input type="number" id="bioIdade" placeholder="45"></div>
+                    <div class="form-group"><label>Fator Atividade / Injúria</label>
+                        <select id="bioFator">
+                            <option value="1.2">1.2 - Sedentário / Acamado</option>
+                            <option value="1.375" selected>1.375 - Atividade Leve / Deambulando</option>
+                            <option value="1.55">1.55 - Atividade Moderada</option>
+                            <option value="1.725">1.725 - Atividade Intensa</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>% Gordura Corporal</label><input type="number" step="0.1" id="bioGordura" placeholder="42.5"></div>
+                    <div class="form-group"><label>Massa Muscular (kg)</label><input type="number" step="0.1" id="bioMassa" placeholder="54.1"></div>
+                    <div class="form-group"><label>Água Corporal (%)</label><input type="number" step="0.1" id="bioAgua" placeholder="45.2"></div>
+                    <div class="form-group"><label>Gordura Visceral (nível)</label><input type="number" id="bioVisceral" placeholder="12"></div>
+                    <div class="form-group"><label>Circunferência Cintura (cm)</label><input type="number" id="bioCintura" placeholder="102"></div>
+                    <div class="form-group"><label>Circunferência Quadril (cm)</label><input type="number" id="bioQuadril" placeholder="110"></div>
+                </div>
+                <div style="margin-top: 15px; background: var(--primary-light); padding: 12px; border-radius: 6px;">
+                    <button class="btn" onclick="calcularDRIsIMC()">Calcular IMC, TMB e Gasto Energético</button>
+                    <p id="resultadoCalculos" style="font-size: 13px; margin-top: 8px; color: var(--primary); font-weight: bold;"></p>
+                </div>
+            </div>
+
+            <!-- ABA 4: EXAMES BIOQUÍMICOS -->
+            <div id="tab-exames" class="tab-pane">
+                <h2>Exames Bioquímicos e Laudos</h2>
+                <div class="grid-3">
+                    <div class="form-group"><label>Glicemia de Jejum (mg/dL)</label><input type="number" step="0.1" id="exGlicemia" placeholder="99" oninput="calcularHoma()"></div>
+                    <div class="form-group"><label>Insulina de Jejum (µUI/mL)</label><input type="number" step="0.1" id="exInsulina" placeholder="12" oninput="calcularHoma()"></div>
+                    <div class="form-group"><label>HOMA-IR (Automático)</label><input type="text" id="exHoma" placeholder="2.9" readonly style="background:#f9fafb;"></div>
+                    <div class="form-group"><label>Colesterol Total (mg/dL)</label><input type="text" id="exColesterol" placeholder="210"></div>
+                    <div class="form-group"><label>Triglicerídeos (mg/dL)</label><input type="text" id="exTriglicerides" placeholder="180"></div>
+                    <div class="form-group"><label>TSH / T4 Livre / Albumina / PCR</label><input type="text" id="exTireoide" placeholder="Ex: Albumina 3.8 g/dL"></div>
+                </div>
+                <button class="btn" onclick="salvarExames()">Salvar Exames</button>
+            </div>
+
+            <!-- ABA 5: LISTA DE SUBSTITUIÇÕES -->
+            <div id="tab-substituicoes" class="tab-pane">
+                <h2>Lista Prática de Substituições Alimentares (Base TACO)</h2>
+                <p style="font-size: 12px; color: #666; margin-bottom: 12px;">Consulte ou edite as equivalências para orientar o paciente:</p>
+                <div class="form-group">
+                    <textarea rows="12" id="txtSubstituicoes" style="font-size: 12px; line-height: 1.5;">• GRUPOS DE CARBOIDRATOS (1 Porção = aprox. 15g de CHO):
+- Arroz branco cozido: 2 colheres de servir (50g)
+- Arroz integral cozido: 2 colheres e meia de servir (60g)
+- Batata inglesa cozida: 1 unidade média (90g)
+- Mandioca/Aipim cozida: 1 pedaço pequeno (50g)
+- Pão francês: 1/2 unidade (25g)
+- Pão integral: 2 fatias (50g)
+- Aveia em flocos: 2 colheres de sopa (20g)
+
+• GRUPOS DE PROTEÍNAS (1 Porção = aprox. 15g de Proteína):
+- Frango grelhado (pesado cru): 70g
+- Patinho moído (magro): 70g
+- Ovo de galinha inteiro: 2 unidades
+- Queijo Minas Frescal: 2 fatias médias (50g)
+- Peixe tilápia/pescadinha: 90g
+
+• GRUPOS DE HORTALIÇAS E VEGETAIS:
+- Legumes cozidos: 1 escumadeira (80g)
+- Folhas verdes (alface, rúcula, couve): À vontade</textarea>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn" onclick="salvarSubstituicoes()">Salvar Lista</button>
+                    <button class="btn btn-gold" onclick="enviarSubParaReceituario()">Adicionar ao Receituário A4</button>
+                </div>
+            </div>
+
+            <!-- ABA 6: RECEITUÁRIO A4 E LOGO -->
+            <div id="tab-receituario" class="tab-pane">
+                <h2>Editor do Receituário A4, Logo e Impressão</h2>
+                <div class="grid-2 no-print" style="margin-bottom: 15px;">
+                    <div class="form-group"><label>Carregar Logotipo Oficial</label><input type="file" accept="image/*" onchange="carregarLogo(event)"></div>
+                    <div class="form-group"><label>Ações Rápidas</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-ai" onclick="assistenteIA()">✨ IA: Suplementos</button>
+                            <button class="btn" onclick="salvarReceituario()">💾 Salvar Texto</button>
+                            <button class="btn btn-gold" onclick="window.print()">🖨️ Imprimir PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOLHA A4 OFICIAL -->
+                <div class="a4-wrapper">
+                    <div class="page-a4" id="printable-area">
+                        <div class="cabecalho-doc">
+                            <img id="imgLogo" class="logo-box" style="display:none;" alt="Logo">
+                            <div class="cab-nome">Dr. Rodrigo Garcia Martins</div>
+                            <div class="cab-sub">NUTRICIONISTA CLÍNICO E HOSPITALAR</div>
+                            <div class="cab-esp">Especialista em pacientes de alta complexidade</div>
+                            <div class="cab-reg">CRN-DF 23512 · rodrigogarcianutri@gmail.com · WhatsApp (61) 99186-2992</div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; font-size: 12px; background: #fafafa; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                            <p><b>Paciente:</b> <span id="prevNomePaciente" class="campo-editavel" contenteditable="true">Silvana Francisca Cumaru</span></p>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="color: var(--primary); font-size: 13px; margin-bottom: 5px; border-bottom: 1px solid #eee;">1. Conduta e Prescrição Magistral</h4>
+                            <div id="prevPrescricao" class="campo-editavel" contenteditable="true" style="min-height: 100px; font-size: 12px; line-height: 1.5;">1. Ômega 3 (1000mg) - Tomar 2 cápsulas após o almoço.
+2. Magnésio Dimalato - 1 cápsula antes de dormir.</div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="color: var(--primary); font-size: 13px; margin-bottom: 5px; border-bottom: 1px solid #eee;">2. Plano Alimentar e Orientações</h4>
+                            <div id="prevDieta" class="campo-editavel" contenteditable="true" style="min-height: 120px; font-size: 12px; line-height: 1.5;">• Café da Manhã: Ovos mexidos + Chá verde.
+• Almoço: Salada verde + Arroz integral + Frango grelhado.</div>
+                        </div>
+
+                        <div style="margin-top: 50px; text-align: center;">
+                            <p style="font-size: 12px;">______________________________________</p>
+                            <p style="font-size: 11px; font-weight: bold; color: var(--primary); margin-top: 3px;">Dr. Rodrigo Garcia Martins · CRN-DF 23512</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let pacientes = JSON.parse(localStorage.getItem('nch_pacientes')) || [
+            { nome: 'Silvana Francisca Cumaru', codigo: 'PAC-0001', sexo: 'Feminino' },
+            { nome: 'Rosa Rupeli', codigo: 'PAC-0002', sexo: 'Feminino' },
+            { nome: 'Ravel Kaleski', codigo: 'PAC-0003', sexo: 'Masculino' }
+        ];
+        let pacienteAtivo = localStorage.getItem('nch_ativo') || 'Silvana Francisca Cumaru';
+
+        window.onload = function() {
+            renderizarPacientes();
+            carregarPaciente(pacienteAtivo);
+            const logo = localStorage.getItem('nch_logo_url');
+            if (logo) {
+                const img = document.getElementById('imgLogo');
+                img.src = logo;
+                img.style.display = 'block';
+            }
+            const subSalva = localStorage.getItem('nch_substituicoes');
+            if (subSalva) {
+                document.getElementById('txtSubstituicoes').value = subSalva;
+            }
+        };
+
+        function mudarAba(evt, tabId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        function renderizarPacientes() {
+            const box = document.getElementById('listaPacientesBox');
+            box.innerHTML = '';
+            pacientes.forEach(p => {
+                const cls = (p.nome === pacienteAtivo) ? 'paciente-item active' : 'paciente-item';
+                const div = document.createElement('div');
+                div.className = cls;
+                div.textContent = p.nome;
+                div.onclick = () => trocarPaciente(p.nome);
+                box.appendChild(div);
+            });
+        }
+
+        function novoPaciente() {
+            const nome = prompt("Nome completo do paciente:");
+            if (nome && nome.trim() !== "") {
+                const limpo = nome.trim();
+                const proxCod = 'PAC-' + String(pacientes.length + 1).padStart(4, '0');
+                pacientes.push({ nome: limpo, codigo: proxCod, sexo: 'Feminino' });
+                localStorage.setItem('nch_pacientes', JSON.stringify(pacientes));
+                trocarPaciente(limpo);
+            }
+        }
+
+        function trocarPaciente(nome) {
+            pacienteAtivo = nome;
+            localStorage.setItem('nch_ativo', nome);
+            renderizarPacientes();
+            carregarPaciente(nome);
+        }
+
+        function obterDadosPaciente(nome) {
+            return JSON.parse(localStorage.getItem('nch_dados_' + nome)) || {};
+        }
+
+        function gravarDadosPaciente(nome, novosDados) {
+            const atual = obterDadosPaciente(nome);
+            const atualizado = Object.assign({}, atual, novosDados);
+            localStorage.setItem('nch_dados_' + nome, JSON.stringify(atualizado));
+        }
+
+        function carregarPaciente(nome) {
+            const pacObj = pacientes.find(p => p.nome === nome) || {};
+            const d = obterDadosPaciente(nome);
+
+            document.getElementById('cadNome').value = nome;
+            document.getElementById('cadCodigo').value = d.codigo || pacObj.codigo || 'PAC-0001';
+            document.getElementById('cadNasc').value = d.nasc || '';
+            document.getElementById('cadSexo').value = d.sexo || pacObj.sexo || 'Feminino';
+            document.getElementById('cadFone').value = d.fone || '';
+            document.getElementById('cadEmail').value = d.email || '';
+
+            document.getElementById('anIntestino').value = d.anIntestino || 'Regular (Diário)';
+            document.getElementById('anPA').value = d.anPA || '';
+            document.getElementById('anAgua').value = d.anAgua || '';
+            document.getElementById('anAlergias').value = d.anAlergias || '';
+            document.getElementById('anObs').value = d.anObs || '';
+
+            document.getElementById('bioPeso').value = d.bioPeso || '';
+            document.getElementById('bioAltura').value = d.bioAltura || '';
+            document.getElementById('bioIdade').value = d.bioIdade || '';
+            document.getElementById('bioFator').value = d.bioFator || '1.375';
+            document.getElementById('bioGordura').value = d.bioGordura || '';
+            document.getElementById('bioMassa').value = d.bioMassa || '';
+            document.getElementById('bioAgua').value = d.bioAgua || '';
+            document.getElementById('bioVisceral').value = d.bioVisceral || '';
+            document.getElementById('bioCintura').value = d.bioCintura || '';
+            document.getElementById('bioQuadril').value = d.bioQuadril || '';
+            document.getElementById('resultadoCalculos').innerText = d.resultadoCalculos || '';
+
+            document.getElementById('exGlicemia').value = d.exGlicemia || '';
+            document.getElementById('exInsulina').value = d.exInsulina || '';
+            document.getElementById('exHoma').value = d.exHoma || '';
+            document.getElementById('exColesterol').value = d.exColesterol || '';
+            document.getElementById('exTriglicerides').value = d.exTriglicerides || '';
+            document.getElementById('exTireoide').value = d.exTireoide || '';
+
+            document.getElementById('prevNomePaciente').innerText = nome;
+            document.getElementById('prevPrescricao').innerText = d.prevPrescricao || "1. Ômega 3 (1000mg) - Tomar 2 cápsulas após o almoço.\n2. Magnésio Dimalato - 1 cápsula antes de dormir.";
+            document.getElementById('prevDieta').innerText = d.prevDieta || "• Café da Manhã: Ovos mexidos + Chá verde.\n• Almoço: Salada verde + Arroz integral + Frango grelhado.";
+        }
+
+        function salvarPacienteAtual() {
+            const novoNome = document.getElementById('cadNome').value.trim();
+            if (!novoNome) { alert("Informe o nome do paciente."); return; }
+
+            const idx = pacientes.findIndex(p => p.nome === pacienteAtivo);
+            if (idx !== -1) {
+                pacientes[idx].nome = novoNome;
+                pacientes[idx].codigo = document.getElementById('cadCodigo').value;
+                pacientes[idx].sexo = document.getElementById('cadSexo').value;
+            } else {
+                pacientes.push({ nome: novoNome });
+            }
+
+            if (novoNome !== pacienteAtivo) {
+                const dadosAntigos = obterDadosPaciente(pacienteAtivo);
+                localStorage.setItem('nch_dados_' + novoNome, JSON.stringify(dadosAntigos));
+                localStorage.removeItem('nch_dados_' + pacienteAtivo);
+                pacienteAtivo = novoNome;
+                localStorage.setItem('nch_ativo', novoNome);
+            }
+
+            localStorage.setItem('nch_pacientes', JSON.stringify(pacientes));
+            gravarDadosPaciente(pacienteAtivo, {
+                codigo: document.getElementById('cadCodigo').value,
+                nasc: document.getElementById('cadNasc').value,
+                sexo: document.getElementById('cadSexo').value,
+                fone: document.getElementById('cadFone').value,
+                email: document.getElementById('cadEmail').value
+            });
+
+            document.getElementById('prevNomePaciente').innerText = pacienteAtivo;
+            renderizarPacientes();
+            alert("Cadastro salvo com sucesso!");
+        }
+
+        function salvarAnamnese() {
+            gravarDadosPaciente(pacienteAtivo, {
+                anIntestino: document.getElementById('anIntestino').value,
+                anPA: document.getElementById('anPA').value,
+                anAgua: document.getElementById('anAgua').value,
+                anAlergias: document.getElementById('anAlergias').value,
+                anObs: document.getElementById('anObs').value
+            });
+            alert("Anamnese salva com sucesso!");
+        }
+
+        function calcularDRIsIMC() {
+            const p = parseFloat(document.getElementById('bioPeso').value);
+            const aCm = parseFloat(document.getElementById('bioAltura').value);
+            const i = parseInt(document.getElementById('bioIdade').value) || 35;
+            const fator = parseFloat(document.getElementById('bioFator').value) || 1.375;
+            const sexo = document.getElementById('cadSexo').value;
+
+            if (!p || !aCm) { alert("Preencha peso e altura."); return; }
+
+            const aM = aCm / 100;
+            const imc = (p / (aM * aM)).toFixed(2);
+            let classificacao = "Eutrofia";
+            if (imc < 18.5) classificacao = "Baixo peso";
+            else if (imc >= 25 && imc < 30) classificacao = "Sobrepeso";
+            else if (imc >= 30) classificacao = "Obesidade";
+
+            const tmb = (sexo === 'Masculino')
+                ? (10 * p) + (6.25 * aCm) - (5 * i) + 5
+                : (10 * p) + (6.25 * aCm) - (5 * i) - 161;
+            const get = tmb * fator;
+
+            const resumo = `IMC: ${imc} kg/m² (${classificacao}) | TMB (Mifflin): ${tmb.toFixed(0)} kcal | GET: ${get.toFixed(0)} kcal/dia`;
+            document.getElementById('resultadoCalculos').innerText = resumo;
+
+            gravarDadosPaciente(pacienteAtivo, {
+                bioPeso: p,
+                bioAltura: aCm,
+                bioIdade: i,
+                bioFator: fator,
+                bioGordura: document.getElementById('bioGordura').value,
+                bioMassa: document.getElementById('bioMassa').value,
+                bioAgua: document.getElementById('bioAgua').value,
+                bioVisceral: document.getElementById('bioVisceral').value,
+                bioCintura: document.getElementById('bioCintura').value,
+                bioQuadril: document.getElementById('bioQuadril').value,
+                resultadoCalculos: resumo
+            });
+        }
+
+        function calcularHoma() {
+            const glic = parseFloat(document.getElementById('exGlicemia').value);
+            const ins = parseFloat(document.getElementById('exInsulina').value);
+            if (glic && ins) {
+                document.getElementById('exHoma').value = ((glic * ins) / 405).toFixed(2);
+            }
+        }
+
+        function salvarExames() {
+            gravarDadosPaciente(pacienteAtivo, {
+                exGlicemia: document.getElementById('exGlicemia').value,
+                exInsulina: document.getElementById('exInsulina').value,
+                exHoma: document.getElementById('exHoma').value,
+                exColesterol: document.getElementById('exColesterol').value,
+                exTriglicerides: document.getElementById('exTriglicerides').value,
+                exTireoide: document.getElementById('exTireoide').value
+            });
+            alert("Exames bioquímicos salvos com sucesso!");
+        }
+
+        function salvarSubstituicoes() {
+            localStorage.setItem('nch_substituicoes', document.getElementById('txtSubstituicoes').value);
+            alert("Lista de substituições atualizada!");
+        }
+
+        function enviarSubParaReceituario() {
+            const sub = document.getElementById('txtSubstituicoes').value;
+            const dietaEl = document.getElementById('prevDieta');
+            dietaEl.innerText = dietaEl.innerText + "\n\n--- LISTA DE SUBSTITUIÇÕES ---\n" + sub;
+            salvarReceituario();
+            alert("Lista adicionada ao Plano Alimentar no Receituário A4!");
+        }
+
+        function salvarReceituario() {
+            gravarDadosPaciente(pacienteAtivo, {
+                prevPrescricao: document.getElementById('prevPrescricao').innerText,
+                prevDieta: document.getElementById('prevDieta').innerText
+            });
+            alert("Receituário salvo com sucesso!");
+        }
+
+        function carregarLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function() {
+                const img = document.getElementById('imgLogo');
+                img.src = reader.result;
+                img.style.display = 'block';
+                localStorage.setItem('nch_logo_url', reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function assistenteIA() {
+            const atual = document.getElementById('prevPrescricao').innerText;
+            const sugestao = "\n3. Coenzima Q10 (100mg) - 1 cápsula após o café da manhã.\n4. Vitamina D3 (2000 UI) + K2 MK-7 (100mcg) - 1 cápsula ao dia junto com refeição lipídica.";
+            document.getElementById('prevPrescricao').innerText = atual + sugestao;
+            gravarDadosPaciente(pacienteAtivo, {
+                prevPrescricao: document.getElementById('prevPrescricao').innerText
+            });
+            alert("Protocolo antioxidante e imunomodulador adicionado à prescrição!");
+        }
+    </script>
+</body>
+</html>
